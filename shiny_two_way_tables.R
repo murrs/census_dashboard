@@ -4,10 +4,12 @@ library(shiny)
 library(data.table)
 library(survey)
 
-censusResults = fread("/home/aaron/Documents/census/Data/main_results_2017/Clean2017CensusFulltabMar2018.csv",
-                      sep = "\t", fill = TRUE, na.strings=c(""," ","NA"))
-censusResults$weightbmorg2[is.na(censusResults$weightbmorg2)] = 0
-censusDesign = svydesign(ids = ~id, weights = ~weightbmorg2,
+#censusResults = fread("/home/spagan/development/CensusBM/bm-census-moop-correlation/data/Census2017Geomapwtlabels.csv",
+#                      sep = "\t", fill = TRUE, na.strings=c("",NA"))
+censusResults = fread("/home/spagan/development/CensusBM/bm-census-moop-correlation/data/Census2017Geomapwtlabels.csv",
+                      fill = TRUE, na.strings=c("","NA"))
+censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
+censusDesign = svydesign(ids = ~id, weights = ~weightnerds,
                          data = censusResults)
 
 weighted_table = function(rowvar, colvar, weights){
@@ -62,10 +64,10 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output) {
-  censusResults = fread("Data\\main_results_2016\\Clean2016CensusFullFeb2017.csv",
-                        na.strings=c(""," ","NA"))
-  censusResults$weightbmorg2[is.na(censusResults$weightbmorg2)] = 0
-  censusDesign = svydesign(ids = ~id, weights = ~weightbmorg2,
+  censusResults = fread("/home/spagan/development/CensusBM/bm-census-moop-correlation/data/Census2017Geomapwtlabels.csv",
+                        na.strings=c("","NA"))
+  censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
+  censusDesign = svydesign(ids = ~id, weights = ~weightnerds,
                            data = censusResults)
   
   
@@ -73,21 +75,21 @@ server <- function(input, output) {
   output$table1 <- renderDataTable({
     v1 <- censusResults[[input$rowvar]]
     v2 <- censusResults[[input$colvar]]
-    weights = censusResults$weightbmorg2
+    weights = censusResults$weightnerds
     prop.table(weighted_table(v1, v2, weights))
   }
   )
   output$table2 <- renderDataTable({
     v1 <- censusResults[[input$rowvar]]
     v2 <- censusResults[[input$colvar]]
-    weights = censusResults$weightbmorg2
+    weights = censusResults$weightnerds
     prop.table(weighted_table(v1, v2, weights), 1)
   }
   )
   output$table3 <- renderDataTable({
     v1 <- censusResults[[input$rowvar]]
     v2 <- censusResults[[input$colvar]]
-    weights = censusResults$weightbmorg2
+    weights = censusResults$weightnerds
     prop.table(weighted_table(v1, v2, weights), 2)
   }
   )
