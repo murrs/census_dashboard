@@ -1,8 +1,9 @@
 ## app.R ##
-library(shinydashboard)
 library(shiny)
+library(shinythemes)
 library(data.table)
 library(survey)
+library(plyr)
 library(ggplot2)
 
 ## Settings
@@ -10,11 +11,8 @@ dataLocation = "/home/spagan/development/CensusBM/bm-census-moop-correlation/dat
 
 
 ## Open input file
-censusResults = fread(dataLocation,
-                      fill = TRUE, na.strings=c("","NA"))
+censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
 censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
-censusDesign = svydesign(ids = ~id, weights = ~weightnerds,
-                         data = censusResults)
 
 weighted_table = function(rowvar, colvar, weights){
   rowLevels = unique(rowvar)[order(unique(rowvar))]
@@ -33,70 +31,72 @@ weighted_table = function(rowvar, colvar, weights){
   return(wtab)
 }
 
-ui <- dashboardPage(
-  dashboardHeader(title = "Basic dashboard"),
-  dashboardSidebar(sidebarMenu(
-    menuItem("Inputs", icon = icon("bar-chart-o"),
-             # Input directly under menuItem
-             selectInput("rowvar", "Row Variable",
-                         choices = c("Gender" = "gender", "Race" = "ethno",
-                                     "Age" = "agegr4", "Virgin" = "firstyear"),
-                         width = '98%'),
-             
-             # Input inside of menuSubItem
-             selectizeInput("colvar", "Column Variable",
-                            choices = names(censusResults),
-                            multiple = FALSE, selected = "completed",
-                            width = '98%')
-    )
-  )),
-  dashboardBody(
-    # Boxes need to be put in a row (or column)
-    fluidRow(
-      p("Density, normalized to all population"),
-      box(dataTableOutput('table1'))
+ui <- fluidPage(theme = shinytheme("lumen"),
+  titlePanel("BM Census Data Explorer"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("rowvar", "Row Variable",
+                  choices = c("Gender" = "gender", "Race" = "ethno",
+                              "Age" = "agegr4", "Virgin" = "firstyear"),
+                  width = '98%'),
+      selectizeInput("colvar", "Column Variable",
+                     choices = names(censusResults),
+                     multiple = FALSE, selected = "completed",
+                     width = '98%'),
+      radioButtons("tabNorm", "Table normalization:",
+                    c("All population"="All", "By row"="Row", "By column"="Col"))
     ),
-    fluidRow(
-      p("Density, normalized by row"),
-      box(dataTableOutput('table2'))
-    ),
-    fluidRow(
-      p("Density, normalized by column"),
-      box(dataTableOutput('table3'))
-    ),
-    fluidRow(
-      p(paste("Univariate density plot for variable","ROW")),
-      #box(renderPlot('plotRow'))
-      plotOutput('plotRow')
+    mainPanel(
+      h2("Univariate distributions"),
+      plotOutput(outputId = "plotRow", width = 300),
+      plotOutput(outputId = "plotCol", width = 300),
+      h2("Variable correlation:"),
+      dataTableOutput('tableTwoVars')
     )
   )
 )
 
 server <- function(input, output) {
-  censusResults = fread(dataLocation, na.strings=c("","NA"))
-  censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
-  censusDesign = svydesign(ids = ~id, weights = ~weightnerds,
-                           data = censusResults)
+  
+  #Filter input data, if requested
+  # For now filtering is disabled, to enable it, add after the last instruction below:
+  #    censusResults %>%
+  #      filter(
+  #        #put here conditions, e.g.
+  #        #gender == input$genderFilter
+  #      )
 
-  #Tables 
-  output$table1 <- renderDataTable({
-    v1 <- censusResults[[input$rowvar]]
-    v2 <- censusResults[[input$colvar]]
-    weights = censusResults$weightnerds
-    prop.table(weighted_table(v1, v2, weights))
+#  filteredData <- reactive({
+#    req(input$rowvar)
+#    req(input$colvar)
+#    cat('input dataset columns:')
+#    cat(colnames(censusResults))
+#    cat('\n')
+#    censusResults[,c(input$colvar,input$rowvar)]
+#  })
+#  colnames(filteredData) <- c("COL", "ROW")
+ 
+  filteredRow <- reactive({
+    req(input$rowvar)
+    censusResults[, input$rowvar]
   })
-  output$table2 <- renderDataTable({
-    v1 <- censusResults[[input$rowvar]]
-    v2 <- censusResults[[input$colvar]]
-    weights = censusResults$weightnerds
-    prop.table(weighted_table(v1, v2, weights), 1)
+
+  filteredCol <- reactive({
+    req(input$colvar)
+    censusResults[, input$colvar]
   })
-  output$table3 <- renderDataTable({
-    v1 <- censusResults[[input$rowvar]]
-    v2 <- censusResults[[input$colvar]]
-    weights = censusResults$weightnerds
-    prop.table(weighted_table(v1, v2, weights), 2)
-  })
+  
+  weights <- censusResults$weightnerds
+  normWeights = sum(censusResults$weightnerds)
+  
+  #Make 2-variables table                         )
+  output$tableTwoVars <- renderDataTable(withProgress({
+    prop.table(weighted_table(filteredRow(), filteredCol(), weights),
+               switch(input$tabNorm,
+                      "All"=NULL,
+                      "Row"=1,
+                      "Col"=2))
+  }, message="Reloading data... Please wait"))
   
   #Make the uni-variate distributions
   colorScheme = c("#EA008B","#CC308D","#AE608E","#909090")
@@ -111,21 +111,30 @@ server <- function(input, output) {
   colorSetting <- scale_color_manual(values=colorscheme)
   fillSetting <- scale_fill_manual(values=colorscheme)
 
-#  output$plotRow <-renderPlot({
-#      ggplot(data=censusResults, aes(x=input$rowvar,weight=weightnerds/sum(weightnerds))) +
-#        themeSetting +
-#        geom_bar(stat="identity", fill=colorScheme[1]) +
-#        labs(title='Univariate distribution',x=input$rowvar,y='Precentage') +
-#        scale_y_continuous(labels=scales::percent)
-#  }, height = 400,width = 600)
-
   output$plotRow <-renderPlot({
-    ggplot(data=censusResults, aes(x=input$rowvar)) +
+    cat(paste('Input variable:', input$rowvar, '\n'))
+    cat('Dataset: \n')
+    cat(filteredRow())
+    cat('\n')
+    #cat(filteredData())
+    #cat('\n')
+    #cat(paste('NRows: ', nrow(filteredData())))
+    #cat(filteredData()[1,])
+    #cat('\n')
+    ggplot() +
       themeSetting +
-      geom_bar(fill=colorScheme[1]) +
-      labs(title='Univariate distribution',x=input$rowvar,y='Precentage') +
+      geom_bar(fill=colorScheme[1], data=filteredRow(), aes_string(x=input$rowvar,weight=100*weights/normWeights)) +
+      labs(x=input$rowvar,y='Precentage') +
       scale_y_continuous(labels=scales::percent)
-  }, height = 400,width = 600)
+  })
+
+  output$plotCol <-renderPlot({
+    ggplot() +
+      themeSetting +
+      geom_bar(fill=colorScheme[1], data=filteredCol(), aes_string(x=input$colvar,weight=100*weights/normWeights)) +
+      labs(x=input$colvar,y='Precentage') +
+      scale_y_continuous(labels=scales::percent)
+  })
   
 }
 
