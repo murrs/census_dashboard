@@ -46,7 +46,7 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                      width = '98%'),
       radioButtons("tabNorm", "Table normalization:",
                     c("All population"="All", "By row"="Row", "By column"="Col")),
-      img(src="censuslogo.png",align="center")
+      img(src="censuslogo.png",align="center",width="50%")
     ),
     mainPanel(
       h2("Univariate distributions"),
