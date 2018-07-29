@@ -1,7 +1,7 @@
 ## app.R ##
 library(shiny)
 library(shinythemes)
-library(data.table)
+#library(data.table)
 library(survey)
 library(plyr)
 library(ggplot2)
@@ -11,7 +11,8 @@ dataLocation = "/home/spagan/development/CensusBM/bm-census-moop-correlation/dat
 
 
 ## Open input file
-censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
+#censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
+censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
 censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
 
 weighted_table = function(rowvar, colvar, weights){
@@ -44,38 +45,26 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                      multiple = FALSE, selected = "completed",
                      width = '98%'),
       radioButtons("tabNorm", "Table normalization:",
-                    c("All population"="All", "By row"="Row", "By column"="Col"))
+                    c("All population"="All", "By row"="Row", "By column"="Col")),
+      img(src="censuslogo.png",align="center")
     ),
     mainPanel(
       h2("Univariate distributions"),
-      plotOutput(outputId = "plotRow", width = 300),
-      plotOutput(outputId = "plotCol", width = 300),
-      h2("Variable correlation:"),
-      dataTableOutput('tableTwoVars')
+      fluidRow(splitLayout(cellWidths = c('50%','50%'), 
+        plotOutput(outputId = "plotRow"),
+        plotOutput(outputId = "plotCol")
+      )),
+      h2("Correlation table"),
+      fluidRow(
+      #dataTableOutput('tableTwoVars')
+      tableOutput('tableTwoVars')
+      )
     )
   )
 )
 
 server <- function(input, output) {
   
-  #Filter input data, if requested
-  # For now filtering is disabled, to enable it, add after the last instruction below:
-  #    censusResults %>%
-  #      filter(
-  #        #put here conditions, e.g.
-  #        #gender == input$genderFilter
-  #      )
-
-#  filteredData <- reactive({
-#    req(input$rowvar)
-#    req(input$colvar)
-#    cat('input dataset columns:')
-#    cat(colnames(censusResults))
-#    cat('\n')
-#    censusResults[,c(input$colvar,input$rowvar)]
-#  })
-#  colnames(filteredData) <- c("COL", "ROW")
- 
   filteredRow <- reactive({
     req(input$rowvar)
     censusResults[, input$rowvar]
@@ -90,14 +79,23 @@ server <- function(input, output) {
   normWeights = sum(censusResults$weightnerds)
   
   #Make 2-variables table                         )
-  output$tableTwoVars <- renderDataTable(withProgress({
+#  output$tableTwoVars <- renderDataTable(withProgress({
+#    prop.table(weighted_table(filteredRow(), filteredCol(), weights),
+#               switch(input$tabNorm,
+#                      "All"=NULL,
+#                      "Row"=1,
+#                      "Col"=2))
+#  }, message="Reloading data... Please wait"))
+
+  output$tableTwoVars <- renderTable(withProgress({
     prop.table(weighted_table(filteredRow(), filteredCol(), weights),
                switch(input$tabNorm,
                       "All"=NULL,
                       "Row"=1,
                       "Col"=2))
-  }, message="Reloading data... Please wait"))
+  }, message="Reloading data... Please wait"),rownames=TRUE)
   
+    
   #Make the uni-variate distributions
   colorScheme = c("#EA008B","#CC308D","#AE608E","#909090")
   themeSetting <- theme(panel.grid.major = element_blank(),
@@ -112,26 +110,17 @@ server <- function(input, output) {
   fillSetting <- scale_fill_manual(values=colorscheme)
 
   output$plotRow <-renderPlot({
-    cat(paste('Input variable:', input$rowvar, '\n'))
-    cat('Dataset: \n')
-    cat(filteredRow())
-    cat('\n')
-    #cat(filteredData())
-    #cat('\n')
-    #cat(paste('NRows: ', nrow(filteredData())))
-    #cat(filteredData()[1,])
-    #cat('\n')
-    ggplot() +
+    ggplot(environment = environment()) +
       themeSetting +
-      geom_bar(fill=colorScheme[1], data=filteredRow(), aes_string(x=input$rowvar,weight=100*weights/normWeights)) +
+      geom_bar(fill=colorScheme[1], data=censusResults, aes_string(x=input$rowvar,weight=weights/normWeights)) +
       labs(x=input$rowvar,y='Precentage') +
       scale_y_continuous(labels=scales::percent)
   })
 
   output$plotCol <-renderPlot({
-    ggplot() +
+    ggplot(environment = environment()) +
       themeSetting +
-      geom_bar(fill=colorScheme[1], data=filteredCol(), aes_string(x=input$colvar,weight=100*weights/normWeights)) +
+      geom_bar(fill=colorScheme[1], data=censusResults, aes_string(x=input$colvar,weight=weights/normWeights)) +
       labs(x=input$colvar,y='Precentage') +
       scale_y_continuous(labels=scales::percent)
   })
