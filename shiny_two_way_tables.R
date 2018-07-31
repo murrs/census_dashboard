@@ -1,7 +1,7 @@
 ## app.R ##
 library(shiny)
 library(shinythemes)
-#library(data.table)
+library(data.table)
 library(survey)
 library(plyr)
 library(ggplot2)
@@ -11,8 +11,8 @@ dataLocation = "/home/spagan/development/CensusBM/bm-census-moop-correlation/dat
 
 
 ## Open input file
-#censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
-censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
+censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
+#censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
 censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
 
 weighted_table = function(rowvar, colvar, weights){
@@ -67,28 +67,22 @@ server <- function(input, output) {
   
   filteredRow <- reactive({
     req(input$rowvar)
-    censusResults[, input$rowvar]
+    censusResults[[input$rowvar]]
   })
 
   filteredCol <- reactive({
     req(input$colvar)
-    censusResults[, input$colvar]
+    censusResults[[input$colvar]]
   })
   
   weights <- censusResults$weightnerds
   normWeights = sum(censusResults$weightnerds)
   
   #Make 2-variables table                         )
-#  output$tableTwoVars <- renderDataTable(withProgress({
-#    prop.table(weighted_table(filteredRow(), filteredCol(), weights),
-#               switch(input$tabNorm,
-#                      "All"=NULL,
-#                      "Row"=1,
-#                      "Col"=2))
-#  }, message="Reloading data... Please wait"))
-
   output$tableTwoVars <- renderTable(withProgress({
-    prop.table(weighted_table(filteredRow(), filteredCol(), weights),
+    v1 <- filteredRow()
+    v2 <- filteredCol()
+    prop.table(weighted_table(v1, v2, weights),
                switch(input$tabNorm,
                       "All"=NULL,
                       "Row"=1,
