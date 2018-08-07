@@ -1,4 +1,4 @@
-## app.R ##
+
 library(shiny)
 library(shinythemes)
 library(data.table)
@@ -7,7 +7,7 @@ library(plyr)
 library(ggplot2)
 
 ## Settings
-dataLocation = "/home/spagan/development/CensusBM/bm-census-moop-correlation/data/Census2017Geomapwtlabels.csv"
+dataLocation = "Census2017Geomapwtlabels.csv"
 
 
 ## Open input file
@@ -32,38 +32,7 @@ weighted_table = function(rowvar, colvar, weights){
   return(wtab)
 }
 
-ui <- fluidPage(theme = shinytheme("lumen"),
-  titlePanel("BM Census Data Explorer"),
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("rowvar", "Row Variable",
-                  choices = c("Gender" = "gender", "Race" = "ethno",
-                              "Age" = "agegr4", "Virgin" = "firstyear"),
-                  width = '98%'),
-      selectizeInput("colvar", "Column Variable",
-                     choices = names(censusResults),
-                     multiple = FALSE, selected = "completed",
-                     width = '98%'),
-      radioButtons("tabNorm", "Table normalization:",
-                    c("All population"="All", "By row"="Row", "By column"="Col")),
-      img(src="censuslogo.png",align="center",width="50%")
-    ),
-    mainPanel(
-      h2("Univariate distributions"),
-      fluidRow(splitLayout(cellWidths = c('50%','50%'), 
-        plotOutput(outputId = "plotRow"),
-        plotOutput(outputId = "plotCol")
-      )),
-      h2("Correlation table"),
-      fluidRow(
-      #dataTableOutput('tableTwoVars')
-      tableOutput('tableTwoVars')
-      )
-    )
-  )
-)
-
-server <- function(input, output) {
+shinyServer( function(input, output) {
   
   filteredRow <- reactive({
     req(input$rowvar)
@@ -119,6 +88,4 @@ server <- function(input, output) {
       scale_y_continuous(labels=scales::percent)
   })
   
-}
-
-shinyApp(ui, server)
+})
