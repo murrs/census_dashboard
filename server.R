@@ -7,13 +7,17 @@ library(plyr)
 library(ggplot2)
 
 ## Settings
-dataLocation = "Census2017Geomapwtlabels.csv"
+dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
 
 
 ## Open input file
-censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
+censusResults = fread(dataLocation, sep = "\t", na.strings = c("", "NA"))
 #censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
 censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
+
+varnames = fread("variable_name_lookup.csv", na.strings = "")
+varnames$label[varnames$varnames == "weightnerds"] = "weightnerds"
+censusResults[, (varnames$varnames[is.na(varnames$label)]):=NULL]
 
 weighted_table = function(rowvar, colvar, weights){
   rowLevels = unique(rowvar)[order(unique(rowvar))]
@@ -72,20 +76,26 @@ shinyServer( function(input, output) {
   colorSetting <- scale_color_manual(values=colorscheme)
   fillSetting <- scale_fill_manual(values=colorscheme)
 
-  output$plotRow <-renderPlot({
+  output$plotRow <- renderPlot({
     ggplot(environment = environment()) +
       themeSetting +
-      geom_bar(fill=colorScheme[1], data=censusResults, aes_string(x=input$rowvar,weight=weights/normWeights)) +
-      labs(x=input$rowvar,y='Precentage') +
-      scale_y_continuous(labels=scales::percent)
+      geom_bar(fill = colorScheme[1], data=censusResults, 
+               aes_string(x = input$rowvar,weight=weights / normWeights)) +
+      labs(x = varnames$label[varnames$varnames == input$colvar],
+           y = 'Precentage') +
+      scale_y_continuous(labels=scales::percent) +
+      theme(axis.text.x=element_text(angle=90, hjust=1))
   })
 
-  output$plotCol <-renderPlot({
+  output$plotCol <- renderPlot({
     ggplot(environment = environment()) +
       themeSetting +
-      geom_bar(fill=colorScheme[1], data=censusResults, aes_string(x=input$colvar,weight=weights/normWeights)) +
-      labs(x=input$colvar,y='Precentage') +
-      scale_y_continuous(labels=scales::percent)
+      geom_bar(fill = colorScheme[1], data=censusResults, 
+               aes_string(x = input$colvar,weight=weights / normWeights)) +
+      labs(x = varnames$label[varnames$varnames == input$colvar],
+           y = 'Precentage') +
+      scale_y_continuous(labels=scales::percent) +
+      theme(axis.text.x=element_text(angle=90, hjust=1))
   })
   
 })

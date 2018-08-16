@@ -7,19 +7,21 @@ library(plyr)
 library(ggplot2)
 
 ## Settings
-dataLocation = "Census2017Geomapwtlabels.csv"
-censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
+#dataLocation = "Census2017Geomapwtlabels.csv"
+#censusResults = fread(dataLocation, fill = TRUE, na.strings=c("","NA"))
+varnames = fread("variable_name_lookup.csv", na.strings = "")
+varnames2 = varnames$varnames[!is.na(varnames$label)]
+names(varnames2) = varnames$label[!is.na(varnames$label)]
 
 shinyUI(fluidPage(theme = shinytheme("lumen"),
   titlePanel("BM Census Data Explorer"),
   sidebarLayout(
     sidebarPanel(
       selectInput("rowvar", "Row Variable",
-                  choices = c("Gender" = "gender", "Race" = "ethno",
-                              "Age" = "agegr4", "Virgin" = "firstyear"),
+                  choices = varnames2,
                   width = '98%'),
       selectizeInput("colvar", "Column Variable",
-                     choices = names(censusResults),
+                     choices = varnames2,
                      multiple = FALSE, selected = "completed",
                      width = '98%'),
       radioButtons("tabNorm", "Table normalization:",
