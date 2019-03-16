@@ -7,7 +7,8 @@ library(plyr)
 library(ggplot2)
 
 ## Settings
-dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
+#dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
+dataLocation = "Clean2017CensusFulltabMar2018.csv"
 
 
 ## Open input file
@@ -73,8 +74,8 @@ shinyServer( function(input, output) {
                         axis.title.y = element_text(face = "bold", margin = margin(0,20,0,0), size = 14),
                         axis.title.x = element_text(face = "bold", margin = margin(20,0,0,0), size = 14),
                         axis.text = element_text(size = 13), plot.title = element_text(face = "bold", hjust = 0.5))
-  colorSetting <- scale_color_manual(values=colorscheme)
-  fillSetting <- scale_fill_manual(values=colorscheme)
+  colorSetting <- scale_color_manual(values=colorScheme)
+  fillSetting <- scale_fill_manual(values=colorScheme)
 
   output$plotRow <- renderPlot({
     ggplot(environment = environment()) +
