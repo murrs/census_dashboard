@@ -10,7 +10,6 @@ library(ggplot2)
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
 dataLocation = "Clean2017CensusFulltabMar2018.csv"
 
-
 ## Open input file
 censusResults = fread(dataLocation, sep = "\t", na.strings = c("", "NA"))
 #censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
