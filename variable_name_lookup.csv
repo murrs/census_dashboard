@@ -300,8 +300,8 @@ hoursvehicgen,
 campfueltype,
 campgenoutput,
 hourscampgen,
-address_letter,
-address_hour,
+address_letter,Address Letter
+address_hour, Address Hour
 assignedcamp,
 locationattract,
 locationsurface,
