@@ -81,7 +81,7 @@ shinyServer( function(input, output) {
       themeSetting +
       geom_bar(fill = colorScheme[1], data=censusResults, 
                aes_string(x = input$rowvar,weight=weights / normWeights)) +
-      labs(x = varnames$label[varnames$varnames == input$colvar],
+      labs(x = varnames$label[varnames$varnames == input$rowvar],
            y = 'Precentage') +
       scale_y_continuous(labels=scales::percent) +
       theme(axis.text.x=element_text(angle=90, hjust=1))
