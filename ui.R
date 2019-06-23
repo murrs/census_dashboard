@@ -17,6 +17,12 @@ shinyUI(fluidPage(theme = shinytheme("lumen"),
   titlePanel("BM Census Data Explorer"),
   sidebarLayout(
     sidebarPanel(
+      fileInput("dataLocation", "Load new CSV/TSV data file",
+                accept = c("text/csv", 
+                           "text/comma-separated-values,text/plain",
+                           ".csv",
+                           ".tsv")
+      ),
       selectInput("rowvar", "Row Variable",
                   choices = varnames2,
                   width = '98%'),

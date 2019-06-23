@@ -9,15 +9,22 @@ library(ggplot2)
 ## Settings
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
 dataLocation = "Clean2017CensusFulltabMar2018.csv"
+variableLocation = "variable_name_lookup.csv"
 
-## Open input file
-censusResults = fread(dataLocation, sep = "\t", na.strings = c("", "NA"))
-#censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
-censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
-
-varnames = fread("variable_name_lookup.csv", na.strings = "")
-varnames$label[varnames$varnames == "weightnerds"] = "weightnerds"
-censusResults[, (varnames$varnames[is.na(varnames$label)]):=NULL]
+#censusResults = data.table();
+weights=c();
+normWeights=c();
+load_new_data = function(inputFileName, forceLoad) {
+  if (!is.null(inputFileName)) {
+    if ((inputFileName != dataLocation) || forceLoad) {
+      censusResults <<- fread(dataLocation, sep = "\t", na.strings = c("", "NA"))
+      #censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
+      censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
+      weights <<- censusResults$weightnerds
+      normWeights <<- sum(censusResults$weightnerds)
+    }
+  }
+}
 
 weighted_table = function(rowvar, colvar, weights){
   rowLevels = unique(rowvar)[order(unique(rowvar))]
@@ -36,23 +43,36 @@ weighted_table = function(rowvar, colvar, weights){
   return(wtab)
 }
 
+## Open input files
+load_new_data(dataLocation, TRUE)
+varnames = fread(variableLocation, na.strings = "")
+varnames$label[varnames$varnames == "weightnerds"] = "weightnerds"
+censusResults[, (varnames$varnames[is.na(varnames$label)]):=NULL]
+
+## Main server function
 shinyServer( function(input, output) {
   
   filteredRow <- reactive({
+    if (!is.null(input$dataLocation)) {
+      load_new_data(input$dataLocation["datapath"])
+    }
     req(input$rowvar)
     censusResults[[input$rowvar]]
   })
 
   filteredCol <- reactive({
+    if (!is.null(input$dataLocation)) {
+      load_new_data(input$dataLocation["datapath"])
+    }
     req(input$colvar)
     censusResults[[input$colvar]]
   })
   
-  weights <- censusResults$weightnerds
-  normWeights = sum(censusResults$weightnerds)
-  
   #Make 2-variables table                         )
   output$tableTwoVars <- renderTable(withProgress({
+    if (!is.null(input$dataLocation)) {
+      load_new_data(input$dataLocation["datapath"])
+    }
     v1 <- filteredRow()
     v2 <- filteredCol()
     prop.table(weighted_table(v1, v2, weights),
