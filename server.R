@@ -5,6 +5,9 @@ library(data.table)
 library(survey)
 library(plyr)
 library(ggplot2)
+library(dplyr)
+library(knitr)
+library(kableExtra)
 
 ## Settings
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
@@ -69,18 +72,31 @@ shinyServer( function(input, output) {
   })
   
   #Make 2-variables table                         )
-  output$tableTwoVars <- renderTable(withProgress({
-    if (!is.null(input$dataLocation)) {
-      load_new_data(input$dataLocation["datapath"])
-    }
+  output$tableTwoVars <- function(){
+    # if (!is.null(input$dataLocation)) {
+    #   load_new_data(input$dataLocation["datapath"])
+    # }
     v1 <- filteredRow()
     v2 <- filteredCol()
-    prop.table(weighted_table(v1, v2, weights),
-               switch(input$tabNorm,
-                      "All"=NULL,
-                      "Row"=1,
-                      "Col"=2))
-  }, message="Reloading data... Please wait"),rownames=TRUE)
+    ptab <- prop.table(weighted_table(v1, v2, weights), 2
+               # switch(input$tabNorm,
+               #        "All"=NULL,
+               #        "Row"=1,
+               #        "Col"=2)
+               ) %>%
+      as.table() %>%
+      round(digits = 2) %>%
+      apply(MARGIN = c(1,2), FUN = function(x){
+        cell_spec(x, format = "html", bold = T, 
+                  color = spec_color(x, end = 0.9, scale_from = c(0,1)))
+      })
+
+    kable(ptab, escape = FALSE, digits = 2) %>%
+      kable_styling(c("striped", "condensed"), full_width = FALSE) %>%
+      row_spec(row = 1:nrow(ptab), bold = TRUE) %>%
+      row_spec(row = 0, angle = 0)
+      
+  }
   
     
   #Make the uni-variate distributions

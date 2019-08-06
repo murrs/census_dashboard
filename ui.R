@@ -17,31 +17,35 @@ shinyUI(fluidPage(theme = shinytheme("lumen"),
   titlePanel("BM Census Data Explorer"),
   sidebarLayout(
     sidebarPanel(
-      fileInput("dataLocation", "Load new CSV/TSV data file",
-                accept = c("text/csv", 
-                           "text/comma-separated-values,text/plain",
-                           ".csv",
-                           ".tsv")
-      ),
-      selectInput("rowvar", "Row Variable",
+      # fileInput("dataLocation", "Load new CSV/TSV data file",
+      #           accept = c("text/csv", 
+      #                      "text/comma-separated-values,text/plain",
+      #                      ".csv",
+      #                      ".tsv")
+      # ),
+      h2("Select question to analyze"),
+      selectInput("rowvar", "Analysis Question",
                   choices = varnames2,
                   width = '98%'),
-      selectizeInput("colvar", "Column Variable",
-                     choices = varnames2,
-                     multiple = FALSE, selected = "completed",
-                     width = '98%'),
-      radioButtons("tabNorm", "Table normalization:",
-                    c("All population"="All", "By row"="Row", "By column"="Col")),
+      # radioButtons("tabNorm", "Table normalization:",
+      #               c("All population"="All", "By row"="Row", "By column"="Col")),
       img(src="censuslogo.png",align="center",width="50%")
     ),
     mainPanel(
-      h2("Univariate distributions"),
-      fluidRow(splitLayout(cellWidths = c('50%','50%'), 
-        plotOutput(outputId = "plotRow"),
-        plotOutput(outputId = "plotCol")
-      )),
-      h2("Correlation table"),
+      # fluidRow(
+      #   # Dynamic infoBoxes
+      #   infoBoxOutput("mostCommonResponseBox"),
+      #   infoBoxOutput("leastCommonResponseBox"),
+      #   infoBoxOutput("responseRateBox")
+      # ),
+      h2("Response Distribution"),
+      fluidRow(plotOutput(outputId = "plotRow", width = '90%')),
+      h2("Conditional Response Distribution"),
       fluidRow(
+      selectizeInput("colvar", "Column Variable",
+                      choices = varnames2,
+                      multiple = FALSE, selected = "completed",
+                      width = '80%'),
       #dataTableOutput('tableTwoVars')
       tableOutput('tableTwoVars')
       )
