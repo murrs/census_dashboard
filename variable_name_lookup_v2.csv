@@ -1,0 +1,92 @@
+varnames,label
+firstyear,First Year at Burn
+birth,Birth Year
+gender,Gender
+sex,Sex
+residence,Default Residence
+incomep,Personal Income
+incomeh,Household Income
+language,First Language Still Used
+color,Person of Color
+usvote,Eligible to Vote in US
+usparty,Political Party
+sexattraction,Sexual Attraction
+sexorientation,Sexual Orientation
+openrelat,Open Relationship
+spirituality,Spirituality
+religion,Religion
+bmevents,Attended Regional Events
+princf_incl,Principles Practice Frequently Radical Inclusion
+princf_gift,Principles Practice Frequently Gifting
+princf_decom,Principles Practice Frequently Decommodification
+princf_reli,Principles Practice Frequently Radical Self-reliance
+princf_expr,Principles Practice Frequently Radical Self-expression
+princf_commu,Principles Practice Frequently Communal Effort
+princf_resp,Principles Practice Frequently Civic Responsibility
+princf_lnt,Principles Practice Frequently Leave No Trace
+princf_part,Principles Practice Frequently Participation
+princf_immed,Principles Practice Frequently Immediacy
+princd_incl,Principles Difficult Radical Inclusion
+princd_gift,Principles Difficult Gifting
+princd_decom,Principles Difficult Decommodification
+princd_reli,Principles Difficult Radical Self-reliance
+princd_expr,Principles Difficult Radical Self-expression
+princd_commu,Principles Difficult Communal Effort
+princd_resp,Principles Difficult Civic Responsibility
+princd_lnt,Principles Difficult Leave No Trace
+princd_part,Principles Difficult Participation
+princd_immed,Principles Difficult Immediacy
+prinimport,Principles Importance
+prinessent,Principles Essential to Burning Man Experience
+princwork,Principles Incorporating in Workplace
+volunteerbrc,Volunteered Black Rock City
+volunteerbmreg,Volunteered Regionals
+volunteerbwb,Volunteered Burners Without Borders
+volunteerart,Volunteered Art Projects
+volunteerpolit,Volunteered Political Campaign or Voter Registration
+volunteerschool,Volunteered at School or University
+volunteerenv,Volunteered Animals or Environmental Clean Up
+volunteercommun,Volunteered Community Groups or Clubs
+volunteerself,Volunteered Self-initiated Good Deeds
+volunteerother,Volunteered Other non-profits or charities
+volunteerinspired,Volunteered Inspired After Going to Black Rock City
+burnerid,Identify as a Burner
+yearround,BMOrg Should Facilitate Year Round Activities
+arrival,Arrival Date
+leaving,Departure Date
+travelbrc,Travel Method to Black Rock City
+fly,Flight Origination
+nbvehicle,Number in Vehicle
+nb012vehicle,Number Under 13 in Vehicle
+nb1317vehicle,Number Between 13 and 17 in Vehicle
+vehicletype,Vehicle Type
+ticketwhere,Ticket Acquisition
+ticketcost,Ticket Cost
+address_letter,Address Letter
+address_hour,Address Hour
+virgin,Virgin
+polykink,Poly or Kinkster
+age,Age
+agegr,Age Group
+agegr2,Age Group 2
+agegr3,Age Group 3
+agegr4,Age Group 4
+agegr5,Age Group 5
+nbburns2,Number of Burns
+nbburns3,Number of Burns 2
+nbburns4,Number of Burns 3
+nbburns5,Number of Burns 4
+timesincefirstburn2,Years Since First Burn
+country,Country or Region of Origin
+educ,Education
+ethno,Ethnoracial Background
+nbvotes,Number of Past Four Election Voted
+votestatus,Voted in Any of the Past Four Elections
+sexattraction2,Sexual Attraction 2
+het,Heterosexual
+gaylesb,Gay or Lesbian
+bisex,Bisexual
+bicur,Bicurious
+asex,Asexual
+refusesexlabels,Refeuse Sex Labels
+lgbt,LGBT

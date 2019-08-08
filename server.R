@@ -11,23 +11,23 @@ library(kableExtra)
 
 ## Settings
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
-dataLocation = "Clean2017CensusFulltabMar2018.csv"
-variableLocation = "variable_name_lookup.csv"
+dataLocation = "census_3yr_dashboard.RData"
+variableLocation = "variable_name_lookup_v2.csv"
 
 #censusResults = data.table();
-weights=c();
-normWeights=c();
-load_new_data = function(inputFileName, forceLoad) {
-  if (!is.null(inputFileName)) {
-    if ((inputFileName != dataLocation) || forceLoad) {
-      censusResults <<- fread(dataLocation, sep = "\t", na.strings = c("", "NA"))
-      #censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
-      censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
-      weights <<- censusResults$weightnerds
-      normWeights <<- sum(censusResults$weightnerds)
-    }
-  }
-}
+# weights=c();
+# normWeights=c();
+# load_new_data = function(inputFileName, forceLoad) {
+#   if (!is.null(inputFileName)) {
+#     if ((inputFileName != dataLocation) || forceLoad) {
+#       censusResults <<- fread(dataLocation, sep = "\t", na.strings = c("", "NA"))
+#       #censusResults = read.csv(dataLocation, fill = TRUE, na.strings=c("","NA"))
+#       censusResults$weightnerds[is.na(censusResults$weightnerds)] = 0
+#       weights <<- censusResults$weightnerds
+#       normWeights <<- sum(censusResults$weightnerds)
+#     }
+#   }
+# }
 
 weighted_table = function(rowvar, colvar, weights){
   rowLevels = unique(rowvar)[order(unique(rowvar))]
@@ -47,28 +47,28 @@ weighted_table = function(rowvar, colvar, weights){
 }
 
 ## Open input files
-load_new_data(dataLocation, TRUE)
+load(dataLocation)
 varnames = fread(variableLocation, na.strings = "")
-varnames$label[varnames$varnames == "weightnerds"] = "weightnerds"
-censusResults[, (varnames$varnames[is.na(varnames$label)]):=NULL]
+# varnames$label[varnames$varnames == "weightnerds"] = "weightnerds"
+# censusResults[, (varnames$varnames[is.na(varnames$label)]):=NULL]
 
 ## Main server function
 shinyServer( function(input, output) {
   
   filteredRow <- reactive({
-    if (!is.null(input$dataLocation)) {
-      load_new_data(input$dataLocation["datapath"])
-    }
+    # if (!is.null(input$dataLocation)) {
+    #   load_new_data(input$dataLocation["datapath"])
+    # }
     req(input$rowvar)
-    censusResults[[input$rowvar]]
+    censusResults[[as.character(input$year)]][[input$rowvar]]
   })
 
   filteredCol <- reactive({
-    if (!is.null(input$dataLocation)) {
-      load_new_data(input$dataLocation["datapath"])
-    }
+    # if (!is.null(input$dataLocation)) {
+    #   load_new_data(input$dataLocation["datapath"])
+    # }
     req(input$colvar)
-    censusResults[[input$colvar]]
+    censusResults[[as.character(input$year)]][[input$colvar]]
   })
   
   #Make 2-variables table                         )
@@ -78,7 +78,8 @@ shinyServer( function(input, output) {
     # }
     v1 <- filteredRow()
     v2 <- filteredCol()
-    ptab <- prop.table(weighted_table(v1, v2, weights), 2
+    weightsyear <- censusResults[[as.character(input$year)]][["weights"]]
+    ptab <- prop.table(weighted_table(v1, v2, weightsyear), 2
                # switch(input$tabNorm,
                #        "All"=NULL,
                #        "Row"=1,
@@ -113,25 +114,28 @@ shinyServer( function(input, output) {
   fillSetting <- scale_fill_manual(values=colorScheme)
 
   output$plotRow <- renderPlot({
+    censusyear = censusResults[[as.character(input$year)]]
     ggplot(environment = environment()) +
       themeSetting +
-      geom_bar(fill = colorScheme[1], data=censusResults, 
-               aes_string(x = input$rowvar,weight=weights / normWeights)) +
+      geom_bar(fill = colorScheme[1], 
+               data=censusyear, 
+               aes_string(x = input$rowvar, 
+                          weight = censusyear$normWeights)) +
       labs(x = varnames$label[varnames$varnames == input$rowvar],
-           y = 'Precentage') +
+           y = 'Percentage') +
       scale_y_continuous(labels=scales::percent) +
       theme(axis.text.x=element_text(angle=90, hjust=1))
   })
 
-  output$plotCol <- renderPlot({
-    ggplot(environment = environment()) +
-      themeSetting +
-      geom_bar(fill = colorScheme[1], data=censusResults, 
-               aes_string(x = input$colvar,weight=weights / normWeights)) +
-      labs(x = varnames$label[varnames$varnames == input$colvar],
-           y = 'Precentage') +
-      scale_y_continuous(labels=scales::percent) +
-      theme(axis.text.x=element_text(angle=90, hjust=1))
-  })
+  # output$plotCol <- renderPlot({
+  #   ggplot(environment = environment()) +
+  #     themeSetting +
+  #     geom_bar(fill = colorScheme[1], data=censusResults, 
+  #              aes_string(x = input$colvar,weight=weights / normWeights)) +
+  #     labs(x = varnames$label[varnames$varnames == input$colvar],
+  #          y = 'Precentage') +
+  #     scale_y_continuous(labels=scales::percent) +
+  #     theme(axis.text.x=element_text(angle=90, hjust=1))
+  # })
   
 })

@@ -14,9 +14,10 @@ varnames2 = varnames$varnames[!is.na(varnames$label)]
 names(varnames2) = varnames$label[!is.na(varnames$label)]
 
 shinyUI(fluidPage(theme = shinytheme("lumen"),
-  titlePanel("BM Census Data Explorer"),
+  titlePanel("BRC Census Data Explorer"),
   sidebarLayout(
     sidebarPanel(
+      img(src="censuslogo.png",align="center",width="50%"),
       # fileInput("dataLocation", "Load new CSV/TSV data file",
       #           accept = c("text/csv", 
       #                      "text/comma-separated-values,text/plain",
@@ -27,9 +28,13 @@ shinyUI(fluidPage(theme = shinytheme("lumen"),
       selectInput("rowvar", "Analysis Question",
                   choices = varnames2,
                   width = '98%'),
+      sliderInput("year", "Year:",
+                  min = 2016, max = 2018,
+                  value = 2018,
+                  sep = "")
       # radioButtons("tabNorm", "Table normalization:",
       #               c("All population"="All", "By row"="Row", "By column"="Col")),
-      img(src="censuslogo.png",align="center",width="50%")
+      
     ),
     mainPanel(
       # fluidRow(
