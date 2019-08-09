@@ -8,6 +8,8 @@ library(ggplot2)
 library(dplyr)
 library(knitr)
 library(kableExtra)
+library(plotly)
+library(scales)
 
 ## Settings
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
@@ -45,6 +47,12 @@ weighted_table = function(rowvar, colvar, weights){
   rownames(wtab) = rowLevels
   return(wtab)
 }
+
+# makePlotData <- function(df, groupvar){
+#   groupvar <- sym(groupvar)
+#   df %>% group_by(!!groupvar) %>% 
+#     summarize(p = sum(normWeights))
+# }
 
 ## Open input files
 load(dataLocation)
