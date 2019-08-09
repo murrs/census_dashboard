@@ -8,8 +8,12 @@ library(ggplot2)
 library(dplyr)
 library(knitr)
 library(kableExtra)
+<<<<<<< HEAD
 library(plotly)
 library(scales)
+=======
+library(ggmosaic) #for new chart
+>>>>>>> 17d7462774d96bd21cd14402970b36033f08c90b
 
 ## Settings
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
@@ -145,5 +149,18 @@ shinyServer( function(input, output) {
   #     scale_y_continuous(labels=scales::percent) +
   #     theme(axis.text.x=element_text(angle=90, hjust=1))
   # })
-  
+
+    # FDZ edit
+    output$mosaicPlot<- renderPlot({
+      censusResults[[as.character(input$year)]]%>%
+        group_by_at(c(input$colvar,input$rowvar))%>%
+        summarise(n = n())%>% #This part counts how many instances for each pair
+        ungroup()%>%
+        mutate_if(is.character,as.factor)%>% #factors are required for geom_mosaic
+        ggplot() +
+        themeSetting +
+        geom_mosaic(aes_string(weight='n', x=paste0("product(",input$rowvar, ")"), fill=input$colvar))+
+        scale_fill_manual(values=colorScheme)+
+        theme(axis.text.x=element_text(angle=90, hjust=1))
+        })
 })

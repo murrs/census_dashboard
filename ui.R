@@ -52,7 +52,9 @@ shinyUI(fluidPage(theme = shinytheme("lumen"),
                       multiple = FALSE, selected = "completed",
                       width = '80%'),
       #dataTableOutput('tableTwoVars')
-      tableOutput('tableTwoVars')
+      tableOutput('tableTwoVars'),
+      plotOutput(outputId = "mosaicPlot")
+      
       )
     )
   )
