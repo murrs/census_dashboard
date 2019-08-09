@@ -8,12 +8,9 @@ library(ggplot2)
 library(dplyr)
 library(knitr)
 library(kableExtra)
-<<<<<<< HEAD
 library(plotly)
 library(scales)
-=======
 library(ggmosaic) #for new chart
->>>>>>> 17d7462774d96bd21cd14402970b36033f08c90b
 
 ## Settings
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
