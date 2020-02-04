@@ -14,8 +14,10 @@ library(ggmosaic) #for new chart
 
 ## Settings
 #dataLocation = "C:\\Users\\Aaron\\Documents\\census\\Data\\main_results_2017\\Online survey\\csv\\Clean2017CensusFulltabMar2018.csv"
-dataLocation = "census_3yr_dashboard.RData"
-variableLocation = "variable_name_lookup_v2.csv"
+# dataLocation2018 = "census_2018_dashboard.csv"
+# dataLocation2017 = "census_2017_dashboard.csv"
+# dataLocation2016 = "census_2016_dashboard.csv"
+# variableLocation = "variable_name_lookup_v2.csv"
 
 #censusResults = data.table();
 # weights=c();
@@ -56,9 +58,9 @@ weighted_table = function(rowvar, colvar, weights){
 # }
 
 ## Open input files
-load(dataLocation)
-varnames = fread(variableLocation, na.strings = "")
-# varnames$label[varnames$varnames == "weightnerds"] = "weightnerds"
+load("census_3yr_dashboard_v2.RData")
+varnames = fread("variable_name_lookup_v2.csv", na.strings = "")
+varnames$label[varnames$varnames == "weightnerds"] = "weightnerds"
 # censusResults[, (varnames$varnames[is.na(varnames$label)]):=NULL]
 
 ## Main server function
@@ -69,15 +71,16 @@ shinyServer( function(input, output) {
     #   load_new_data(input$dataLocation["datapath"])
     # }
     req(input$rowvar)
-    censusResults[[as.character(input$year)]][[input$rowvar]]
+    censusResults[[as.character(input$year)]][[varnames$varnames[varnames$label == input$rowvar]]]
   })
-
+  
   filteredCol <- reactive({
     # if (!is.null(input$dataLocation)) {
     #   load_new_data(input$dataLocation["datapath"])
     # }
     req(input$colvar)
-    censusResults[[as.character(input$year)]][[input$colvar]]
+    # censusResults[[as.character(input$year)]][[input$colvar]]
+    censusResults[[as.character(input$year)]][[varnames$varnames[varnames$label == input$colvar]]]
   })
   
   #Make 2-variables table                         )
@@ -88,29 +91,25 @@ shinyServer( function(input, output) {
     v1 <- filteredRow()
     v2 <- filteredCol()
     weightsyear <- censusResults[[as.character(input$year)]][["weights"]]
-    ptab <- prop.table(weighted_table(v1, v2, weightsyear), 2
-               # switch(input$tabNorm,
-               #        "All"=NULL,
-               #        "Row"=1,
-               #        "Col"=2)
-               ) %>%
+    ptab <- prop.table(weighted_table(v1, v2, weightsyear), 2) %>%
       as.table() %>%
       round(digits = 2) %>%
       apply(MARGIN = c(1,2), FUN = function(x){
-        cell_spec(x, format = "html", bold = T, 
+        cell_spec(x, format = "html", bold = T,
                   color = spec_color(x, end = 0.9, scale_from = c(0,1)))
       })
-
+    
     kable(ptab, escape = FALSE, digits = 2) %>%
       kable_styling(c("striped", "condensed"), full_width = FALSE) %>%
       row_spec(row = 1:nrow(ptab), bold = TRUE) %>%
       row_spec(row = 0, angle = 0)
-      
+    
   }
   
-    
+  
   #Make the uni-variate distributions
-  colorScheme = c("#EA008B","#CC308D","#AE608E","#909090")
+  colorScheme = c("#EA008B","#909090","#962499","#5F98F4","#00CDC8","#000000","#FF7DCA",
+                  "#32DB32","#FFB937","#F20202","#619B48","#218BA2","#AC5A05")
   themeSetting <- theme(panel.grid.major = element_blank(),
                         panel.grid.minor.y = element_line(color="#666464", size = .1),
                         panel.background  = element_blank(), axis.line.x = element_line(color="Black", size=.75),
@@ -121,21 +120,22 @@ shinyServer( function(input, output) {
                         axis.text = element_text(size = 13), plot.title = element_text(face = "bold", hjust = 0.5))
   colorSetting <- scale_color_manual(values=colorScheme)
   fillSetting <- scale_fill_manual(values=colorScheme)
-
+  
   output$plotRow <- renderPlot({
     censusyear = censusResults[[as.character(input$year)]]
+    
     ggplot(environment = environment()) +
       themeSetting +
       geom_bar(fill = colorScheme[1], 
                data=censusyear, 
-               aes_string(x = input$rowvar, 
+               aes_string(x = varnames$varnames[varnames$label == input$rowvar], 
                           weight = censusyear$normWeights)) +
       labs(x = varnames$label[varnames$varnames == input$rowvar],
            y = 'Percentage') +
       scale_y_continuous(labels=scales::percent) +
       theme(axis.text.x=element_text(angle=90, hjust=1))
   })
-
+  
   # output$plotCol <- renderPlot({
   #   ggplot(environment = environment()) +
   #     themeSetting +
@@ -146,18 +146,21 @@ shinyServer( function(input, output) {
   #     scale_y_continuous(labels=scales::percent) +
   #     theme(axis.text.x=element_text(angle=90, hjust=1))
   # })
-
-    # FDZ edit
-    output$mosaicPlot<- renderPlot({
-      censusResults[[as.character(input$year)]]%>%
-        group_by_at(c(input$colvar,input$rowvar))%>%
-        summarise(n = n())%>% #This part counts how many instances for each pair
-        ungroup()%>%
-        mutate_if(is.character,as.factor)%>% #factors are required for geom_mosaic
-        ggplot() +
-        themeSetting +
-        geom_mosaic(aes_string(weight='n', x=paste0("product(",input$rowvar, ")"), fill=input$colvar))+
-        scale_fill_manual(values=colorScheme)+
-        theme(axis.text.x=element_text(angle=90, hjust=1))
-        })
+  
+  # FDZ edit
+  output$mosaicPlot<- renderPlot({
+    censusResults[[as.character(input$year)]]%>%
+      group_by_at(c(varnames$varnames[varnames$label == input$colvar],
+                    varnames$varnames[varnames$label == input$rowvar]))%>%
+      summarise(n = n())%>% #This part counts how many instances for each pair
+      ungroup()%>%
+      mutate_if(is.character,as.factor)%>% #factors are required for geom_mosaic
+      ggplot() +
+      themeSetting +
+      geom_mosaic(aes_string(weight='n', 
+                             x=paste0("product(",varnames$varnames[varnames$label == input$rowvar], ")"), 
+                             fill=varnames$varnames[varnames$label == input$colvar]))+
+      scale_fill_manual(values=colorScheme)+
+      theme(axis.text.x=element_text(angle=90, hjust=1))
+  })
 })
